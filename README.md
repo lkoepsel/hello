@@ -3,28 +3,25 @@
 **Formerly know as rasp-mDNS**, *yeah, its clear why I changed the name.*
 
 Recently, the Raspberry Pi Foundation released [Raspberry Pi Connect](https://www.raspberrypi.com/documentation/services/connect.html), which "*provides secure access to your Raspberry Pi from anywhere in the world.*" That's great, except for a couple of issues:
-* You need to register. I understand why, however, its a step which is a pain to solve simple problem.
-* Its a *world-wide* solution. I was looking for a *local* solution.
+* You need to register. I understand why, however, its a burdensome step to solve such a simple problem.
+* Its a *world-wide* solution. I was looking for a *local* solution, one which doesn't **require** connecting to the internet.
 * And the deal-killer, it requires the full desktop install. If I need to connect to my Raspberry Pi, more often than not, its in a headless configuration. Headless and desktop are somewhat *antithetical*. 
 
 ## Description
-This is a solution for identifying freshly programmed, headless *Raspberry Pi (RPI)*'s on a large network. In large networks (*ex: community college*), the wireless network might have two issues:
-
-1. As network is quite large, it can be difficult to readily identify a *RPi* which has recently joined the network, therefore making it almost impossible to connect to the *RPi*.
-2. The wireless network might also use a blank password, which previously wasn't easily handled by the *Raspberry Pi Imager* software.
-
-For #2, this solution uses version *1.8.3* or later of the *RPi Imager* application to create an image which allows for a blank password to the wireless network. It also assigns a unique host name to make it easily identifiable, once it connects to the network.
+This is a solution for identifying newly programmed, headless *Raspberry Pi (RPi)*'s on a large network. In large networks (*ex: community college*), the wireless network has a significant issue. As network is quite large, it can be difficult to readily identify a *RPi* which has recently joined the network, therefore making it almost impossible to connect to the *RPi*.
 
 ## Easy Solutions
-There are two, dead-simple, solutions which work well in small networks:
+There are two, dead-simple, solutions which work well in **small networks**:
 
-1. Attempt to connect on startup using the *multicast DNS* service. This uses the existing solution of [*avahi aka zeroconfig or Bonjour*](https://www.raspberrypi.com/documentation/computers/remote-access.html#resolving-raspberrypi-local-with-mdns) to connect with the *RPi*. It can work quite well and is the best solution, however, it doesn't always work. And when it doesn't work, there needs to be a remediation step.
+1. Use the *multicast DNS* service to attempt to connect. This uses the existing solution of [*avahi aka zeroconfig or Bonjour*](https://www.raspberrypi.com/documentation/computers/remote-access.html#resolving-raspberrypi-local-with-mdns) to connect with the *RPi*. It works quite well and is the best solution.
 
 Using the username and hostname you used in programming the SD card with the *Pi Imager* application, try:
 ```bash
 ssh username@hostname.local
 ```
-2. In large networks this might take a while or not work at all. To mitigate this issue, try this command: (*replace hostname with the name you provided when programming the SD card*). This command may work faster than attempting to login immediately.
+In large networks this might take a while or not work at all. Worse yet, it doesn't always work. And when it doesn't work, there needs to be a remediation step.
+
+2. To mitigate this issue, try this command: (*replace hostname with the name you provided when programming the SD card*). This command may work faster than attempting to login immediately.
 ```bash
 dns-sd -G v4 hostname.local
 ```
@@ -43,14 +40,19 @@ ssh 192.168.1.6
 # after a warning regarding the "...authenticity of host..." and a few seconds, you will see the CLI prompt.
 ```
 
-## The *hello* Solution - Run a service on Raspberry Pi
-In large networks, the above solutions either don't work or may take a significant amount of time. Another solution is to implement an auto-connecting application on startup, on the *RPi*. This application will ping a local server with its host name and IP address. This ensures you have ready access to the *RPi* without having to go through determining its IP address again.
+And the second step might not work, either. Leaving you with a *RPi*, which is on the network, however, you are unable to connect to it.
 
-An important step in this process is the ability to save the server's IP address on the *RPi*, prior to boot. Once implemented, the steps are:
-1. Determine your host system (your PC) IP address
-2. Using any platform, Windows, macOS or Linux, enter the IP address into a specific file on the *RPi* SD Card. Key to this step, is file location will be accessible by any platform.
+## The *hello* Solution - Run a service on Raspberry Pi
+The next solution is to implement an auto-connecting application on startup, on the *RPi*. This application will ping a local server (your PC) with its host name and IP address. This ensures you have ready access to the *RPi* without having to go through determining its IP address again.
+
+This solution will work due to the ability to save your server's IP address on the *RPi*, prior to boot. This means the *RPi* is trying to find you, instead of vice-versa. 
+
+Once implemented, the steps to connect in a new network are:
+1. Determine your host system (your PC) IP address in the new network
+2. Using any platform, Windows, macOS or Linux, enter the IP address into a specific file on the *RPi* SD Card.
 3. Place the SD Card in the RPi and power it up. Start the hello_server application on your host system and wait for the *ping*.
 
+## Installation
 ### Creating a hello.service on Raspberry Pi
 Create a startup application, which will ping a server by *IP address* and report **its own** host name and IP address.
 
