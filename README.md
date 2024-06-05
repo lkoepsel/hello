@@ -53,6 +53,13 @@ Once implemented, the steps to connect in a new network are:
 3. Place the SD Card in the RPi and power it up. Start the hello_server application on your host system and wait for the *ping*.
 
 ## Installation
+### Requirements
+#### Host System (Your PC)
+1. *Python* and the *flask* library
+
+#### Raspberry Pi
+1. Raspberry Pi OS Bookworm (or later)
+
 ### Creating a hello.service on Raspberry Pi
 Create a startup application, which will ping a server by *IP address* and report **its own** host name and IP address.
 
@@ -211,10 +218,10 @@ sudo systemctl stop hello.service
 sudo systemctl restart hello.service
 ```
 
-### 4. In another CLI tab, on your system, run a simple Python server.py
+### 4. In another CLI tab, on your system, run a simple Python hello_server.py
 This will listen for all connections to it as a server and will print the host name and IP address when it is contacted by the *hello.py* client. Run this on your PC, make sure your are on the same network as the RPi wireless connection.
 #### Installation
-1. `sudo nano server.py` then copy/paste contents below into file:
+1. `sudo nano hello_server.py` then copy/paste contents below into file:
 
 ```python
 from flask import Flask, request
@@ -240,9 +247,9 @@ The server will run and listening for the *RPi* on your PC.
 
 **Important: Reboot your *RPi* and it will connect to the server with its host name and IP address.**
 
-Once the RPi has connected and the IP address has been identified, *Ctrl-C* to exit the server program. You don't want to leave the *server.py* application running, as it can be a security risk.
+Once the RPi has connected and the IP address has been identified, *Ctrl-C* to exit the server program. You don't want to leave the *hello_server.py* application running, as it can be a security risk.
 
-#### Example Output of server.py:
+#### Example Output of hello_server.py:
 ```bash
 python serverv2.py
  * Serving Flask app 'serverv2'
@@ -290,7 +297,7 @@ wormhole send pibuildv3.img.gz
 ## Notes
 1. If the *RPi* isn't connecting, it might be a problem with startup. The service logs to */boot/firmware/hello.log*.  If you are unable to access the Pi, you may shutdown the *RPi* and examine the file via a Mac or Windows system. It will be at the root level of the */bootfs* folder.
 1. If you are able to access the Pi, you may `cat /boot/firmware/hello.log` or use `journalctl -b | grep hello` to examine the startup log for *hello.service* entries. 
-1. Implementing the optional solution, allows you to change networks and identify your PC's new IP address. Mount the SD card on your PC and edit /bootfs/hello_ip.txt, replacing the IP address with the new one. Put the SD card back into the *RPi*, run `python server.py` then boot the *RPi*. It will ping your server with its new address.
+1. Implementing the optional solution, allows you to change networks and identify your PC's new IP address. Mount the SD card on your PC and edit /bootfs/hello_ip.txt, replacing the IP address with the new one. Put the SD card back into the *RPi*, run `python hello_server.py` then boot the *RPi*. It will ping your server with its new address.
 1. If you have multiple *RPI*'s and want to confirm which one is which, run `sudo du -h /`, which prints the size of all folders to the screen. This will make the green led light for several seconds.
 1. When using *RPi Imager* software, use *Shift-Ctrl-X* to bring up the options screen.
 1. Once you've confirmed you no longer need the *RPi* pinging the server, you can stop it with *sudo systemctl stop hello.service*. The service is designed to stop running once it has successfully pinged a server.
