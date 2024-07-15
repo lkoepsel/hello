@@ -7,6 +7,9 @@ Recently, the Raspberry Pi Foundation released [Raspberry Pi Connect](https://ww
 * Its a *world-wide* solution. I was looking for a *local* solution, one which doesn't **require** connecting to the internet.
 * And the deal-killer, it requires the full desktop install. If I need to connect to my Raspberry Pi, more often than not, its in a headless configuration. Headless and desktop are somewhat *antithetical*. 
 
+**Update: July 4th, 2024**
+Raspberry Pi has added the ability to perform this on a CLI OS, such as Bookworm (Lite), however, it still seems to be a bit much. And possibly a security concern.
+
 ## Description
 This is a solution for identifying newly programmed, headless *Raspberry Pi (RPi)*'s on a large network. In large networks (*ex: community college*), the wireless network has a significant issue. As network is quite large, it can be difficult to readily identify a *RPi* which has recently joined the network, therefore making it almost impossible to connect to the *RPi*.
 
@@ -55,7 +58,7 @@ Once implemented, the steps to connect in a new network are:
 ## Installation
 ### Requirements
 #### Host System (Your PC)
-1. *Python* and the *flask* library
+1. *Python* and the *flask* library. If you don't have *flask* installed and encounter the new Python requirement to run in a virtual environment...you may install it system-wide with *sudo apt install python3-flask* on *Debian* (or *Raspberry Pi Bookworm*).
 
 #### Raspberry Pi
 1. Raspberry Pi OS Bookworm (or later)
@@ -148,7 +151,7 @@ sudo nano /boot/firmware/hello_ip.txt
 Enter the only the numeric IP address of your PC WITHOUT a return at the end of the line. The file *hello_ip.txt* will need to look like:
 
 ```bash
-192.168.1.124
+192.168.1.124:2000
 ```
 *Ctrl-S* (save) *Ctrl-X* (exit)
 
@@ -237,7 +240,7 @@ def print_text():
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=80, debug=True)
+    app.run(host='0.0.0.0', port=2000, debug=True)
 
 ```
 2. Exit nano using *Ctrl-S* *Ctrl-X*
@@ -249,6 +252,31 @@ The server will run and listening for the *RPi* on your PC.
 
 Once the RPi has connected and the IP address has been identified, *Ctrl-C* to exit the server program. You don't want to leave the *hello_server.py* application running, as it can be a security risk.
 
+### NOTES
+#### Permissions Issue
+If you might get the following response:
+```bash
+python3 -m hello_server
+ * Serving Flask app 'hello_server'
+ * Debug mode: on
+Permission denied
+```
+
+In the example above, I've changed the port from 80, the typical *http* port, which requires sudo permissions to *2000*.
+
+#### Install Flask
+If you need to install *flask*, and get the new *externally-managed-environment* as in:
+```bash
+error: externally-managed-environment
+
+× This environment is externally managed
+╰─> To install Python packages system-wide, try apt install
+    python3-xyz, where xyz is the package you are trying to
+    install....
+```
+
+I recommend you follow the advice on a Linux system and simply use *sudo apt install python3-flask*, to install *flask*.
+ 
 #### Example Output of hello_server.py:
 ```bash
 python serverv2.py
