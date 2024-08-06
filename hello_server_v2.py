@@ -24,22 +24,26 @@ def display_text():
           <head>
             <meta charset="utf-8">
             <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-            <title>Display Text</title>
+            <link rel="stylesheet" type="text/css" href="/static/mvp.css">
+            <title>Lab 10C Hostnames</title>
           </head>
           <body>
-            <div style="text-align: left; margin-top: 50px;">
-              <h1>Information</h1>
-              <p>Find your hostname below to enter <em>ssh pi10C@IP_Address</em> in the terminal on your computer:</p>
+            <main>
+              <h1>Lab 10C Hostnames</h1>
+              <p>1. Find your hostname below.</p>
+              <p>2. Get the corresponding <em>IP_Address</em>.</p>
+              <p>3. In your terminal window, enter <em>ssh pi10C@IP_Address</em></p>
               <ul>
                 {% for data in received_data %}
                   <li><strong>Hostname:</strong> {{ data.text }} <strong>IP_Address:</strong> {{ data.ip }}</li>
                 {% endfor %}
               </ul>
             </div>
+          </main>
           </body>
         </html>
     ''', received_data=received_data)
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=2000, debug=True)
+    app.run(host='0.0.0.0', port=80, debug=True)
