@@ -392,3 +392,4 @@ wormhole send pibuildv3.img.gz
 1. If you have multiple *RPI*'s and want to confirm which one is which, run `sudo du -h /`, which prints the size of all folders to the screen. This will make the green led light for several seconds.
 1. When using *RPi Imager* software, use *Shift-Ctrl-X* to bring up the options screen.
 1. Once you've confirmed you no longer need the *RPi* pinging the server, you can stop it with *sudo systemctl stop hello.service*. The service is designed to stop running once it has successfully pinged a server.
+1. As Windows has difficulty using *Bonjour*, you could consider nmap as an alternative to identify *Raspberry Pi*'s on your network. [nmap Windows Version](https://nmap.org/download.html#windows)
