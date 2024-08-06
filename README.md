@@ -14,7 +14,7 @@ Raspberry Pi has added the ability to perform this on a CLI OS, such as Bookworm
 This is a solution for identifying newly programmed, headless *Raspberry Pi (RPi)*'s on a large network. In large networks (*ex: community college*), the wireless network has a significant issue. As network is quite large, it can be difficult to readily identify a *RPi* which has recently joined the network, therefore making it almost impossible to connect to the *RPi*.
 
 ## Easy Solutions
-There are two, dead-simple, solutions which work well in **small networks**:
+There are two, dead-simple, solutions which work well in **small networks** and on *macOS* or *Linux*. *Windows* unfortunately, doesn't do *Bonjour*.:
 
 1. Use the *multicast DNS* service to attempt to connect. This uses the existing solution of [*avahi aka zeroconfig or Bonjour*](https://www.raspberrypi.com/documentation/computers/remote-access.html#resolving-raspberrypi-local-with-mdns) to connect with the *RPi*. It works quite well and is the best solution.
 
@@ -68,7 +68,7 @@ Create a startup application, which will ping a server by *IP address* and repor
 
 #### 1. Create hello.py
 Open a Python file, then copy/paste contents below into file:
-```bash
+```python
 # open a file named hello.py
 sudo nano /usr/bin/hello.py
 ```
@@ -220,9 +220,9 @@ sudo systemctl stop hello.service
 # restart the hello.service, this will stop then start the service
 sudo systemctl restart hello.service
 ```
-
-### 4. In another CLI tab, on your system, run a simple Python hello_server.py
-This will listen for all connections to it as a server and will print the host name and IP address when it is contacted by the *hello.py* client. Run this on your PC, make sure your are on the same network as the RPi wireless connection.
+## Pick 4a or 4b below based on your needs.
+### 4a. Simple CLI Version: Run a Python hello_server.py
+In another CLI tab, on your system or a system for which you want to serve as a web server. This web server will listen for all connections to it and will print the host name and IP address when it is contacted by the *hello.py* client. Run this on your PC, make sure your are on the same network as the RPi wireless connection.
 #### Installation
 1. `sudo nano hello_server.py` then copy/paste contents below into file:
 
@@ -248,9 +248,72 @@ if __name__ == '__main__':
 
 The server will run and listening for the *RPi* on your PC. 
 
+### 4b. Simple Browser Version: Run a Python hello_server.py
+In another CLI tab, on your system or a system for which you want to serve as a web server. This web server will listen for all connections to it and will print the host name and IP address when it is contacted by the *hello.py* client. Run this on your PC, make sure your are on the same network as the RPi wireless connection. **This version will offer a web page which will show all pings, which means it works well where there are multiple *RPi*'s which need to connect, classroom, for example.
+#### Installation
+1. `sudo nano hello_server.py` then copy/paste contents below into file:
+
+```python
+from flask import Flask, request, render_template_string
+
+app = Flask(__name__)
+
+# List to store dictionaries of received texts and IP addresses
+received_data = []
+
+
+@app.route('/receive', methods=['POST'])
+def receive_text():
+    global received_data
+    text = request.form['text']
+    ip = request.remote_addr
+    received_data.append({'text': text, 'ip': ip})
+    print(f"Received text: {text} from IP: {ip}")
+    return 'Data received successfully', 200
+
+
+@app.route('/', methods=['GET'])
+def display_text():
+    return render_template_string('''
+        <!doctype html>
+        <html lang="en">
+          <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+            <link rel="stylesheet" type="text/css" href="/static/mvp.css">
+            <title>Lab 10C Hostnames</title>
+          </head>
+          <body>
+            <main>
+              <h1>Lab 10C Hostnames</h1>
+              <p>1. Find your hostname below.</p>
+              <p>2. Get the corresponding <em>IP_Address</em>.</p>
+              <p>3. In your terminal window, enter <em>ssh pi10C@IP_Address</em></p>
+              <ul>
+                {% for data in received_data %}
+                  <li><strong>Hostname:</strong> {{ data.text }} <strong>IP_Address:</strong> {{ data.ip }}</li>
+                {% endfor %}
+              </ul>
+            </div>
+          </main>
+          </body>
+        </html>
+    ''', received_data=received_data)
+
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=80, debug=True)
+
+```
+2. Exit nano using *Ctrl-S* *Ctrl-X*
+2. Make a new directory called static and make sure mvp.css is in the directory.
+3. `python -m server`
+
+The server will run and listening for the *RPi* on your PC. 
+
 **Important: Reboot your *RPi* and it will connect to the server with its host name and IP address.**
 
-Once the RPi has connected and the IP address has been identified, *Ctrl-C* to exit the server program. You don't want to leave the *hello_server.py* application running, as it can be a security risk.
+**Once the RPi has connected and the IP address has been identified, *Ctrl-C* to exit the server program. You don't want to leave the *hello_server.py* application running, as it can be a security risk.**
 
 ### NOTES
 #### Permissions Issue
