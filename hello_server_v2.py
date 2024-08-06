@@ -27,7 +27,7 @@ def display_text():
             <title>Display Text</title>
           </head>
           <body>
-            <div style="text-align: center; margin-top: 50px;">
+            <div style="text-align: left; margin-top: 50px;">
               <h1>Information</h1>
               <p>Find your hostname below to enter <em>ssh pi10C@IP_Address</em> in the terminal on your computer:</p>
               <ul>
@@ -42,4 +42,4 @@ def display_text():
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=80, debug=True)
+    app.run(host='0.0.0.0', port=2000, debug=True)
