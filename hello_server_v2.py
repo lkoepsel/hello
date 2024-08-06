@@ -30,15 +30,29 @@ def display_text():
           <body>
             <main>
               <h1>Lab 10C Hostnames</h1>
-              <p>1. Find your hostname below.</p>
-              <p>2. Get the corresponding <em>IP_Address</em>.</p>
-              <p>3. In your terminal window, enter <em>ssh pi10C@IP_Address</em></p>
-              <ul>
+              <h2>Instructions</h2>
+              <ol>
+              <li>Find your hostname below</li>
+              <li>Get the corresponding <em>IP Address</em></li>
+              <li>In your terminal window, enter <em>ssh pi10C@IP Address</em></li>
+              </ol>
+              <table>
+                <thead>
+                  <tr>
+                    <th scope="col">Hostname</th>
+                    <th scope="col">IP Address</th>
+                  </tr>
+                </thead>
+                <tbody>
                 {% for data in received_data %}
-                  <li><strong>Hostname:</strong> {{ data.text }} <strong>IP_Address:</strong> {{ data.ip }}</li>
+                <tr>
+                  <th scope="row">{{ data.text }}</th>
+                  <td>{{ data.ip }}</td>
+                </tr>
                 {% endfor %}
-              </ul>
-            </div>
+                  </tbody>
+                </table>
+                <p><strong>Example:</strong> <em>ssh pi10C@172.2.24.210</em></p>
           </main>
           </body>
         </html>
