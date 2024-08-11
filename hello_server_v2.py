@@ -6,7 +6,7 @@ app = Flask(__name__)
 received_data = []
 
 
-@app.route('/receive', methods=['POST'])
+@app.route('/', methods=['POST'])
 def receive_text():
     global received_data
     text = request.form['text']
