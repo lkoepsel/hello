@@ -3,6 +3,8 @@ from datetime import datetime
 import sqlite3
 import os
 import argparse
+from datetime import datetime, timezone
+import time
 
 app = Flask(__name__)
 
@@ -32,10 +34,12 @@ def get_messages():
     c.execute('SELECT text, ip, timestamp FROM messages ORDER BY timestamp DESC')
     messages = []
     for row in c.fetchall():
-        # Convert timestamp string to datetime object
-        timestamp = datetime.strptime(row[2], '%Y-%m-%d %H:%M:%S')
-        # Format the datetime as month/day/year hour:minute
-        formatted_time = timestamp.strftime('%m/%d/%Y %H:%M')
+        # Convert timestamp string to datetime object (SQLite stores in UTC)
+        utc_timestamp = datetime.strptime(row[2], '%Y-%m-%d %H:%M:%S')
+        # Convert to local time using system timezone
+        local_timestamp = datetime.fromtimestamp(utc_timestamp.timestamp())
+        # Format the datetime as month/day/year hour:minute in local time
+        formatted_time = local_timestamp.strftime('%m/%d/%Y %H:%M')
         messages.append({
             'text': row[0],
             'ip': row[1],
