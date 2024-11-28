@@ -79,7 +79,7 @@ def server_error(e):
 if __name__ == '__main__':
     init_db()  # Initialize database on startup
     app.run(
-        host='127.0.0.1',  # Only accept local connections by default
+        host='0.0.0.0',  # Accept connections from any network interface
         port=PORT,
         debug=DEBUG
     )
