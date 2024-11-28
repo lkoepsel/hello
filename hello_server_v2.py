@@ -34,12 +34,10 @@ def get_messages():
     c.execute('SELECT text, ip, timestamp FROM messages ORDER BY timestamp DESC')
     messages = []
     for row in c.fetchall():
-        # Convert timestamp string to datetime object (SQLite stores in UTC)
-        utc_timestamp = datetime.strptime(row[2], '%Y-%m-%d %H:%M:%S')
-        # Convert to local time using system timezone
-        local_timestamp = datetime.fromtimestamp(utc_timestamp.timestamp())
-        # Format the datetime as month/day/year hour:minute in local time
-        formatted_time = local_timestamp.strftime('%m/%d/%Y %H:%M')
+        # Convert timestamp string to datetime for formatting
+        timestamp = datetime.strptime(row[2], '%Y-%m-%d %H:%M:%S')
+        # Format as month/day/year hour:minute
+        formatted_time = timestamp.strftime('%m/%d/%Y %H:%M')
         messages.append({
             'text': row[0],
             'ip': row[1],
@@ -85,10 +83,12 @@ def receive_text():
     try:
         ip = request.remote_addr
         
-        # Store in database
+        # Store in database with local time
+        local_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         conn = sqlite3.connect(DATABASE)
         c = conn.cursor()
-        c.execute('INSERT INTO messages (text, ip) VALUES (?, ?)', (text, ip))
+        c.execute('INSERT INTO messages (text, ip, timestamp) VALUES (?, ?, ?)', 
+                 (text, ip, local_time))
         conn.commit()
         conn.close()
         
