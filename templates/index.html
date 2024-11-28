@@ -21,6 +21,7 @@
           <tr>
             <th scope="col">Hostname</th>
             <th scope="col">IP Address</th>
+            <th scope="col">Last Update</th>
           </tr>
         </thead>
         <tbody>
@@ -28,6 +29,7 @@
         <tr>
           <th scope="row">{{ data.text }}</th>
           <td>{{ data.ip }}</td>
+          <td>{{ data.timestamp }}</td>
         </tr>
         {% endfor %}
         </tbody>
