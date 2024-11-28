@@ -33,6 +33,21 @@ def get_messages():
     conn.close()
     return messages
 
+def clean_test_entries():
+    """Remove entries that were created during unit testing."""
+    conn = sqlite3.connect(DATABASE)
+    c = conn.cursor()
+    # Remove entries from common test IPs and those containing test markers
+    c.execute('''DELETE FROM messages 
+                WHERE ip IN ('127.0.0.1', 'testclient') 
+                OR text LIKE '%test%' 
+                OR text LIKE '%unittest%' ''')
+    deleted_count = c.rowcount
+    conn.commit()
+    conn.close()
+    if deleted_count > 0:
+        print(f"Cleaned {deleted_count} test entries from database")
+
 @app.route('/', methods=['POST'])
 def receive_text():
     text = request.form.get('text', '').strip()
@@ -78,6 +93,7 @@ def server_error(e):
 
 if __name__ == '__main__':
     init_db()  # Initialize database on startup
+    clean_test_entries()  # Clean test entries before starting
     app.run(
         host='0.0.0.0',  # Accept connections from any network interface
         port=PORT,
