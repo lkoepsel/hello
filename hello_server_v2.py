@@ -2,6 +2,7 @@ from flask import Flask, request, render_template, abort
 from datetime import datetime
 import sqlite3
 import os
+import argparse
 
 app = Flask(__name__)
 
@@ -58,6 +59,16 @@ def clean_test_entries():
     if deleted_count > 0:
         print(f"Cleaned {deleted_count} test entries from database")
 
+def reset_database():
+    """Reset the database by dropping and recreating the messages table."""
+    conn = sqlite3.connect(DATABASE)
+    c = conn.cursor()
+    c.execute('DROP TABLE IF EXISTS messages')
+    conn.commit()
+    print("Database has been reset")
+    conn.close()
+    init_db()  # Recreate the table
+
 @app.route('/', methods=['POST'])
 def receive_text():
     text = request.form.get('text', '').strip()
@@ -102,8 +113,19 @@ def server_error(e):
     return str(e), 500
 
 if __name__ == '__main__':
-    init_db()  # Initialize database on startup
-    clean_test_entries()  # Clean test entries before starting
+    # Parse command line arguments
+    parser = argparse.ArgumentParser(description='Run the hello server')
+    parser.add_argument('--reset', action='store_true',
+                      help='Reset the database before starting the server')
+    args = parser.parse_args()
+
+    # Reset database if requested
+    if args.reset:
+        reset_database()
+    else:
+        init_db()  # Initialize database on startup
+        clean_test_entries()  # Clean test entries before starting
+    
     app.run(
         host='0.0.0.0',  # Accept connections from any network interface
         port=PORT,
