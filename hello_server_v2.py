@@ -29,7 +29,17 @@ def get_messages():
     conn = sqlite3.connect(DATABASE)
     c = conn.cursor()
     c.execute('SELECT text, ip, timestamp FROM messages ORDER BY timestamp DESC')
-    messages = [{'text': row[0], 'ip': row[1], 'timestamp': row[2]} for row in c.fetchall()]
+    messages = []
+    for row in c.fetchall():
+        # Convert timestamp string to datetime object
+        timestamp = datetime.strptime(row[2], '%Y-%m-%d %H:%M:%S')
+        # Format the datetime as month/day/year hour:minute
+        formatted_time = timestamp.strftime('%m/%d/%Y %H:%M')
+        messages.append({
+            'text': row[0],
+            'ip': row[1],
+            'timestamp': formatted_time
+        })
     conn.close()
     return messages
 

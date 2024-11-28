@@ -44,7 +44,7 @@ host_name = socket.gethostname()
 logging.debug("Host name: %s  ", host_name)
 
 url = 'http://' + ip + '/receive'
-text = f"{host_name}"
+text = f"{host_name}"  # Just send the hostname without "hello from"
 logging.debug(url)
 
 data = {'text': text}
