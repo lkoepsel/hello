@@ -1,7 +1,35 @@
+"""
+Test suite for hello_server.py, a Flask web application that manages Raspberry Pi connections.
+
+This test suite verifies the functionality of hello_server.py using unittest. It tests:
+
+1. Database Operations:
+   - Proper initialization of SQLite database
+   - Creation and cleanup of temporary test database
+   - Data persistence and retrieval
+
+2. HTTP Routes:
+   - GET '/': Verifies HTML template rendering
+   - POST '/': Tests message submission and storage
+
+3. Input Validation:
+   - Empty messages (should be rejected)
+   - Whitespace-only messages (should be rejected)
+   - Oversized messages >1000 chars (should be rejected)
+   - Missing text field in POST request
+   - Multiple valid messages (should all be stored)
+
+Each test uses a temporary database that is created in setUp() and removed in 
+tearDown() to ensure test isolation and prevent test data from persisting.
+
+Usage:
+    python3 -m unittest test_hello_server.py
+"""
+
 import unittest
 import os
 import tempfile
-from hello_server_v2 import app, init_db
+from hello_server import app, init_db
 
 class TestHelloServer(unittest.TestCase):
     def setUp(self):
