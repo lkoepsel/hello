@@ -220,7 +220,7 @@ sudo systemctl stop hello.service
 # restart the hello.service, this will stop then start the service
 sudo systemctl restart hello.service
 ```
-## Pick 4a or 4b below based on your needs.
+## Pick 4a, 4b, or 4c below based on your needs.
 ### 4a. Simple CLI Version: Run a Python hello_server.py
 In another CLI tab, on your system or a system for which you want to serve as a web server. This web server will listen for all connections to it and will print the host name and IP address when it is contacted by the *hello.py* client. Run this on your PC, make sure your are on the same network as the RPi wireless connection.
 #### Installation
@@ -311,9 +311,50 @@ if __name__ == '__main__':
 
 The server will run and listening for the *RPi* on your PC. 
 
-**Important: Reboot your *RPi* and it will connect to the server with its host name and IP address.**
+### 4c. Enhanced Browser Version with Database: Run hello_server_v2.py
+This enhanced version stores all connections in a SQLite database and provides a web interface showing hostnames, IP addresses, and timestamps. It includes several improvements:
 
-**Once the RPi has connected and the IP address has been identified, *Ctrl-C* to exit the server program. You don't want to leave the *hello_server.py* application running, as it can be a security risk.**
+- Persistent storage of connections in a SQLite database
+- Local time display for each connection
+- Clean web interface using MVP.css
+- Command line options for database management
+
+#### Installation
+1. Create the following directory structure:
+```
+hello/
+├── static/
+│   └── mvp.css
+├── templates/
+│   └── index.html
+└── hello_server_v2.py
+```
+
+2. The server can be started with the following options:
+```bash
+# Normal start
+python hello_server_v2.py
+
+# Reset database (clears all entries)
+python hello_server_v2.py --reset
+```
+
+#### Features
+- **Database Storage**: All connections are stored in a SQLite database (`messages.db`)
+- **Local Time**: Timestamps are stored and displayed in local time
+- **Web Interface**: Clean, responsive interface showing:
+  - Hostname
+  - IP Address
+  - Last Update (MM/DD/YYYY HH:MM format)
+- **Database Management**:
+  - Automatic cleanup of test entries
+  - Command line option to reset database
+  - Persistent storage between server restarts
+
+#### Security Notes
+- The server listens on all network interfaces (0.0.0.0) to allow LAN connections
+- Only runs on the local network, not exposed to the internet
+- Database is stored locally and can be reset if needed
 
 ### NOTES
 #### Permissions Issue
