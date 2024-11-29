@@ -281,11 +281,11 @@ def display_text():
             <meta charset="utf-8">
             <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
             <link rel="stylesheet" type="text/css" href="/static/mvp.css">
-            <title>Lab 10C Hostnames</title>
+            <title>Hello Hostnames</title>
           </head>
           <body>
             <main>
-              <h1>Lab 10C Hostnames</h1>
+              <h1>Hello Hostnames</h1>
               <p>1. Find your hostname below.</p>
               <p>2. Get the corresponding <em>IP_Address</em>.</p>
               <p>3. In your terminal window, enter <em>ssh pi10C@IP_Address</em></p>
