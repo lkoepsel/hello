@@ -8,12 +8,12 @@ Recently, the Raspberry Pi Foundation released [Raspberry Pi Connect](https://ww
 * And the deal-killer, it requires the full desktop install. If I need to connect to my Raspberry Pi, more often than not, its in a headless configuration. Headless and desktop are somewhat *antithetical*. 
 
 **Update: July 4th, 2024**
-Raspberry Pi has added the ability to perform this on a CLI OS, such as Bookworm (Lite), however, it still seems to be a bit much. And possibly a security concern.
+Raspberry Pi has added the ability to perform this on a CLI OS, such as Bookworm (Lite), however, it still seems to be a bit much.
 
 ## Description
 This is a solution for identifying newly programmed, headless *Raspberry Pi (RPi)*'s on a large network. In large networks (*ex: community college*), the wireless network has a significant issue. As network is quite large, it can be difficult to readily identify a *RPi* which has recently joined the network, therefore making it almost impossible to connect to the *RPi*.
 
-## Easy Solutions
+## Easy Solution (*macOS* or *Linux*)
 There are two, dead-simple, solutions which work well in **small networks** and on *macOS* or *Linux*. *Windows* unfortunately, doesn't do *Bonjour*.:
 
 1. Use the *multicast DNS* service to attempt to connect. This uses the existing solution of [*avahi aka zeroconfig or Bonjour*](https://www.raspberrypi.com/documentation/computers/remote-access.html#resolving-raspberrypi-local-with-mdns) to connect with the *RPi*. It works quite well and is the best solution.
@@ -46,7 +46,7 @@ ssh 192.168.1.6
 And the second step might not work, either. Leaving you with a *RPi*, which is on the network, however, you are unable to connect to it.
 
 ## The *hello* Solution - Run a service on Raspberry Pi
-The next solution is to implement an auto-connecting application on startup, on the *RPi*. This application will ping a local server (your PC) with its host name and IP address. This ensures you have ready access to the *RPi* without having to go through determining its IP address again.
+The next solution is to implement an auto-connecting application on startup, on the remote *RPi*. This application will ping a local server (your PC or another host *RPi*) with its host name and IP address. This ensures you have ready access to the remote *RPi* without having to go through determining its IP address again.
 
 This solution will work due to the ability to save your server's IP address on the *RPi*, prior to boot. This means the *RPi* is trying to find you, instead of vice-versa. 
 
@@ -56,18 +56,18 @@ Once implemented, the steps to connect in a new network are:
 3. Place the SD Card in the RPi and power it up. Start the hello_server application on your host system and wait for the *ping*.
 
 ## Installation
-### Requirements
-#### Host System (Your PC)
-1. *Python* and the *flask* library. If you don't have *flask* installed and encounter the new Python requirement to run in a virtual environment...you may install it system-wide with *sudo apt install python3-flask* on *Debian* (or *Raspberry Pi Bookworm*).
+### 1. Requirements
+#### 1.1 Host System (Your PC or a host *RPi*)
+*Python* and the *flask* library. If you don't have *flask* installed and encounter the new Python requirement to run in a virtual environment...you may install it system-wide with *sudo apt install python3-flask* on *Debian* (or *Raspberry Pi Bookworm*).
 
-#### Raspberry Pi
-1. Raspberry Pi OS Bookworm (or later)
+#### 1.2. Raspberry Pi (remote *RPi*)
+Raspberry Pi OS Bookworm (or later)
 
-### Creating a hello.service on Raspberry Pi
+### 2. Create a hello.service on the remote Raspberry Pi
 Create a startup application, which will ping a server by *IP address* and report **its own** host name and IP address.
 
-#### 1. Create hello.py
-Open a Python file, then copy/paste contents below into file:
+#### 2.1.. Create hello.py
+This is the program which executes as part of the *hello.service*. Open a Python file, then copy/paste contents below into file:
 ```python
 # open a file named hello.py
 sudo nano /usr/bin/hello.py
@@ -138,10 +138,10 @@ logging.debug(response.text)
 ```
 *Ctrl-S* (save) *Ctrl-X* (exit)
 
-#### 2. Add IP address of the server to the boot folder
+#### 2.2. Add IP address of the host server to the remote *RPi* boot folder
 This step identifies your PC by IP address to the Raspberry Pi:
 
-1. Run `python -m server` from [*hello*](https://github.com/lkoepsel/hello) folder on your PC, this will report the IP address of your PC.
+1. You may run either server program (*simple_server.py or hello_server.py*), and it will report the host IP address. 
 1. Open a the file to contain the IP address.
 
 ```bash
@@ -151,7 +151,7 @@ sudo nano /boot/firmware/hello_ip.txt
 Enter the only the numeric IP address of your PC WITHOUT a return at the end of the line. The file *hello_ip.txt* will need to look like:
 
 ```bash
-192.168.1.124:2000
+192.168.1.124:5000
 ```
 *Ctrl-S* (save) *Ctrl-X* (exit)
 
@@ -159,7 +159,7 @@ Enter the only the numeric IP address of your PC WITHOUT a return at the end of 
 
 There is also a file on *boot/firmware* called *hello.log*, which you can open with a text editor. It will contain the log entries for the *hello.service*. Use these entries if you are having difficulty getting a ping from the *RPi.* 
 
-### 3. Setup `systemd` unit file for hello.py service
+#### 2.3. Setup `systemd` unit file for hello.py service
 This will execute the hello.py app, after all other startup services have been executed on the RPi. 
 
 The service will log entries to */boot/firmware/hello.log* on the *RPi* or */bootfs/hello.log* when examining the SD Card on a Mac/Windows system. Use it to determine any issues with the service.
@@ -204,6 +204,7 @@ sudo systemctl start hello.service
 sudo systemctl status hello.service
 ```
 
+**It is important to enable the service to run on startup.**
 ```bash
 # if hello.service is running well, then enable to run on boot
 sudo systemctl enable hello.service
@@ -220,123 +221,41 @@ sudo systemctl stop hello.service
 # restart the hello.service, this will stop then start the service
 sudo systemctl restart hello.service
 ```
-## Pick 4a, 4b, or 4c below based on your needs.
-### 4a. Simple CLI Version: Run a Python simple_server.py
-In another CLI tab, on your system or a system for which you want to serve as a web server. This web server will listen for all connections to it and will print the host name and IP address when it is contacted by the *hello.py* client. Run this on your PC, make sure your are on the same network as the RPi wireless connection.
-#### Installation
-1. `sudo nano simple_server.py` then copy/paste contents below into file:
+## Pick 3a or 3b below based on your needs.
+### 3a. Simple Version (Good for single *RPi* connections)
+The simple version is useful for single *RPi* connections. Using a terminal program on your PC, use one tab to connect to your hello_server system (typically a host *RPi* or your PC) and the second tab to connect to the remote *RPi* in question. Once this repository is installed on the host *RPi*, follow the steps below:
+1. Run `python -m simple_server` on the host *RPi*.
+2. Ensure the remote *RPi* has the hello.service running.
+3. Reboot the remote *RPi*.
 
-```python
-from flask import Flask, request
-
-app = Flask(__name__)
-
-
-@app.route('/', methods=['POST'])
-def print_text():
-    text = request.form['text']
-    print(text)
-    return 'Connection successful'
-
-
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=2000, debug=True)
-
+In your host tab, once the remote *RPi* has been rebooted, you should see the following:
+```bash
+...
+* Running on http://192.168.1.49:5000
+...
+speedy
+192.168.1.112 - - [29/Nov/2024 08:54:40] "POST / HTTP/1.1" 200 -
 ```
-2. Exit nano using *Ctrl-S* *Ctrl-X*
-3. `python -m server`
 
-The server will run and listening for the *RPi* on your PC. 
+The *running on* message is the IP address of the server *RPi* and the two lines with *speedy* are the hostname and IP address of the remote *RPi*.
 
-### 4b. Simple Browser Version: Run a Python hello_server.py
-In another CLI tab, on your system or a system for which you want to serve as a web server. This web server will listen for all connections to it and will print the host name and IP address when it is contacted by the *hello.py* client. Run this on your PC, make sure your are on the same network as the RPi wireless connection. **This version will offer a web page which will show all pings, which means it works well where there are multiple *RPi*'s which need to connect, classroom, for example.
-#### Installation
-1. `sudo nano hello_server.py` then copy/paste contents below into file:
-
-```python
-from flask import Flask, request, render_template_string
-
-app = Flask(__name__)
-
-# List to store dictionaries of received texts and IP addresses
-received_data = []
-
-
-@app.route('/receive', methods=['POST'])
-def receive_text():
-    global received_data
-    text = request.form['text']
-    ip = request.remote_addr
-    received_data.append({'text': text, 'ip': ip})
-    print(f"Received text: {text} from IP: {ip}")
-    return 'Data received successfully', 200
-
-
-@app.route('/', methods=['GET'])
-def display_text():
-    return render_template_string('''
-        <!doctype html>
-        <html lang="en">
-          <head>
-            <meta charset="utf-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-            <link rel="stylesheet" type="text/css" href="/static/mvp.css">
-            <title>Hello Hostnames</title>
-          </head>
-          <body>
-            <main>
-              <h1>Hello Hostnames</h1>
-              <p>1. Find your hostname below.</p>
-              <p>2. Get the corresponding <em>IP_Address</em>.</p>
-              <p>3. In your terminal window, enter <em>ssh pi10C@IP_Address</em></p>
-              <ul>
-                {% for data in received_data %}
-                  <li><strong>Hostname:</strong> {{ data.text }} <strong>IP_Address:</strong> {{ data.ip }}</li>
-                {% endfor %}
-              </ul>
-            </div>
-          </main>
-          </body>
-        </html>
-    ''', received_data=received_data)
-
-
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=80, debug=True)
-
-```
-2. Exit nano using *Ctrl-S* *Ctrl-X*
-2. Make a new directory called static and make sure mvp.css is in the directory.
-3. `python -m server`
-
-The server will run and listening for the *RPi* on your PC. 
-
-### 4c. Enhanced Browser Version with Database: Run hello_server_v2.py
+### 3b. Enhanced Version with Database: Run hello_server.py
 This enhanced version stores all connections in a SQLite database and provides a web interface showing hostnames, IP addresses, and timestamps. It includes several improvements:
 
 - Persistent storage of connections in a SQLite database
 - Local time display for each connection
 - Clean web interface using MVP.css
-- Command line options for database management
+- Command line options for cleaning database of old entries
 
 #### Installation
-1. Create the following directory structure:
-```
-hello/
-├── static/
-│   └── mvp.css
-├── templates/
-│   └── index.html
-└── hello_server_v2.py
-```
 
-2. The server can be started with the following options:
+The server can be started with the following options:
 ```bash
 # Normal start
-python hello_server_v2.py
+python hello_server.py
 
 # Reset database (clears all entries)
-python hello_server_v2.py --reset
+python hello_server.py --reset
 ```
 
 #### Features
@@ -366,7 +285,7 @@ python3 -m hello_server
 Permission denied
 ```
 
-In the example above, I've changed the port from 80, the typical *http* port, which requires sudo permissions to *2000*.
+In the example above, I've changed the port from 80, the typical *http* port, which requires sudo permissions to *5000*.
 
 #### Install Flask
 If you need to install *flask*, and get the new *externally-managed-environment* as in:
@@ -394,11 +313,11 @@ Press CTRL+C to quit
  * Restarting with stat
  * Debugger is active!
  * Debugger PIN: 101-330-852
-Hello from pitwo
+pitwo
 192.168.1.76 - - [10/Feb/2024 16:16:36] "POST / HTTP/1.1" 200 -
-Hello from pitwo
+pitwo
 192.168.1.76 - - [10/Feb/2024 16:17:29] "POST / HTTP/1.1" 200 -
-Hello from pisan
+pisan
 192.168.1.76 - - [11/Feb/2024 06:46:41] "POST / HTTP/1.1" 200 -
 ```
 ## Initial instance
