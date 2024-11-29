@@ -221,10 +221,10 @@ sudo systemctl stop hello.service
 sudo systemctl restart hello.service
 ```
 ## Pick 4a, 4b, or 4c below based on your needs.
-### 4a. Simple CLI Version: Run a Python hello_server.py
+### 4a. Simple CLI Version: Run a Python simple_server.py
 In another CLI tab, on your system or a system for which you want to serve as a web server. This web server will listen for all connections to it and will print the host name and IP address when it is contacted by the *hello.py* client. Run this on your PC, make sure your are on the same network as the RPi wireless connection.
 #### Installation
-1. `sudo nano hello_server.py` then copy/paste contents below into file:
+1. `sudo nano simple_server.py` then copy/paste contents below into file:
 
 ```python
 from flask import Flask, request
