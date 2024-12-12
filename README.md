@@ -46,7 +46,7 @@ ssh 192.168.1.6
 And the second step might not work, either. Leaving you with a *RPi*, which is on the network, however, you are unable to connect to it.
 
 ## The *hello* Solution - Run a service on Raspberry Pi
-The next solution is to implement an auto-connecting application on startup, on the remote *RPi*. This application will ping a local server (your PC or another host *RPi*) with its host name and IP address. This ensures you have ready access to the remote *RPi* without having to go through determining its IP address again.
+The next solution is to implement an auto-connecting application on startup, **on the remote *RPi***. This application will ping a local server (your PC or another *LAN-based* host *RPi*) with its host name and IP address. This ensures you have ready access to the remote *RPi* without having to go through determining its IP address. 
 
 This solution will work due to the ability to save your server's IP address on the *RPi*, prior to boot. This means the *RPi* is trying to find you, instead of vice-versa. 
 
