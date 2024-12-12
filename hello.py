@@ -7,16 +7,19 @@ import sys
 
 hadtomount = False
 
-if not os.path.exists('/boot/firmware'):
+if not os.path.exists("/boot/firmware"):
     hadtomount = True
     os.system("sudo mount /dev/mmcblk0p1 /boot/firmware")
 
-# set logging to DEBUG, if not showing up
-logging.basicConfig(filename='/boot/firmware/hello.log', encoding='utf-8',
-                    format='%(asctime)s %(filename)s:%(levelname)s: %(message)s',
-                    level=logging.DEBUG)
+# set logging to DEBUG, if messages aren't seen in log file
+logging.basicConfig(
+    filename="/boot/firmware/hello.log",
+    encoding="utf-8",
+    format="%(asctime)s %(filename)s:%(levelname)s: %(message)s",
+    level=logging.DEBUG,
+)
 
-IP_file = "hello_ip.txt"  # Replace with your desired file name
+IP_file = "hello_ip.txt"  # Name of the file containing the IP address
 
 # List of directories to search
 dirs_to_check = ["/boot", "/boot/firmware"]
@@ -43,11 +46,11 @@ if hadtomount:
 host_name = socket.gethostname()
 logging.debug("Host name: %s  ", host_name)
 
-url = 'http://' + ip + '/receive'
-text = f"{host_name}"  # Just send the hostname without "hello from"
+url = "http://" + ip + "/receive"
+text = f"{host_name}"  # send hostname
 logging.debug(url)
 
-data = {'text': text}
+data = {"text": text}
 
 try:
     response = requests.post(url, data=data)

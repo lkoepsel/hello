@@ -46,14 +46,14 @@ ssh 192.168.1.6
 And the second step might not work, either. Leaving you with a *RPi*, which is on the network, however, you are unable to connect to it.
 
 ## The *hello* Solution - Run a service on Raspberry Pi
-The next solution is to implement an auto-connecting application on startup, **on the remote *RPi***. This application will ping a local server (your PC or another *LAN-based* host *RPi*) with its host name and IP address. This ensures you have ready access to the remote *RPi* without having to go through determining its IP address. 
+A third all-encompassing solution is to implement an auto-connecting application on startup, **on the remote *RPi***. This application will ping a local server (your PC or another *LAN-based* host *RPi*) with its host name and IP address. This ensures you have ready access to the remote *RPi* without having to go through determining its IP address. 
 
 This solution will work due to the ability to save your server's IP address on the *RPi*, prior to boot. This means the *RPi* is trying to find you, instead of vice-versa. 
 
 Once implemented, the steps to connect in a new network are:
-1. Determine your host system (your PC) IP address in the new network
-2. Using any platform, Windows, macOS or Linux, enter the IP address into a specific file on the *RPi* SD Card.
-3. Place the SD Card in the RPi and power it up. Start the hello_server application on your host system and wait for the *ping*.
+1. Determine the IP address of your host system.
+2. Using any platform, *Windows*, *macOS* or *Linux*, enter the IP address into a specific file on the *RPi* SD card.
+3. Place the SD card in the RPi and power it up. Start the hello_server application on your host system and wait for the *ping*.
 
 ## Installation
 ### 1. Requirements
@@ -83,16 +83,19 @@ import sys
 
 hadtomount = False
 
-if not os.path.exists('/boot/firmware'):
+if not os.path.exists("/boot/firmware"):
     hadtomount = True
     os.system("sudo mount /dev/mmcblk0p1 /boot/firmware")
 
-# set logging to DEBUG, if not showing up
-logging.basicConfig(filename='/boot/firmware/hello.log', encoding='utf-8',
-                    format='%(asctime)s %(filename)s:%(levelname)s: %(message)s',
-                    level=logging.DEBUG)
+# set logging to DEBUG, if messages aren't seen in log file
+logging.basicConfig(
+    filename="/boot/firmware/hello.log",
+    encoding="utf-8",
+    format="%(asctime)s %(filename)s:%(levelname)s: %(message)s",
+    level=logging.DEBUG,
+)
 
-IP_file = "hello_ip.txt"  # Replace with your desired file name
+IP_file = "hello_ip.txt"  # Name of the file containing the IP address
 
 # List of directories to search
 dirs_to_check = ["/boot", "/boot/firmware"]
@@ -119,11 +122,11 @@ if hadtomount:
 host_name = socket.gethostname()
 logging.debug("Host name: %s  ", host_name)
 
-url = 'http://' + ip + '/receive'
-text = f"{host_name}"  # Just send the hostname without "hello from"
+url = "http://" + ip + "/receive"
+text = f"{host_name}"  # send hostname
 logging.debug(url)
 
-data = {'text': text}
+data = {"text": text}
 
 try:
     response = requests.post(url, data=data)
@@ -141,8 +144,26 @@ logging.debug(response.text)
 #### 2.2. Add IP address of the host server to the remote *RPi* boot folder
 This step identifies your PC by IP address to the Raspberry Pi:
 
-1. You may run either server program (*simple_server.py or hello_server.py*), and it will report the host IP address. 
-1. Open a the file to contain the IP address.
+##### **On your PC or host *RPi***
+
+Run either server program (*simple_server.py or hello_server.py*), and it will report the host IP address.
+```bash
+python -m hello_server
+Cleaned 12 test entries from database
+ * Serving Flask app 'hello_server'
+ * Debug mode: off
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.1.49:5000
+Press CTRL+C to quit
+
+```
+The IP address to use, is the one **which is not 127.0.0.1**, in this case it is *192.168.1.49:5000*. 
+
+##### **On the remote *RPi***
+
+Open the file which will contain the IP address.
 
 ```bash
 sudo nano /boot/firmware/hello_ip.txt
@@ -151,25 +172,26 @@ sudo nano /boot/firmware/hello_ip.txt
 Enter the only the numeric IP address of your PC WITHOUT a return at the end of the line. The file *hello_ip.txt* will need to look like:
 
 ```bash
-192.168.1.124:5000
+192.168.1.49:5000
 ```
 *Ctrl-S* (save) *Ctrl-X* (exit)
 
-**Note:** By storing the IP address in a file at */boot/firmware*, you may access the file on a macOS or Windows system. The *boot/firmware* folder shows up as a readable folder on either system called *bootfs*. This enables you to change the IP address on your PC then re-insert the SD Card into the *RPi* to ping you at a new address. 
+**Note:** By storing the IP address in a file at */boot/firmware*, you may access the file on a macOS or Windows system. The *boot/firmware* folder shows up as a readable folder on either system called *bootfs*. This enables you to change the IP address on your PC then re-insert the SD card into the *RPi* to ping you at a new address. 
 
 There is also a file on *boot/firmware* called *hello.log*, which you can open with a text editor. It will contain the log entries for the *hello.service*. Use these entries if you are having difficulty getting a ping from the *RPi.* 
 
 #### 2.3. Setup `systemd` unit file for hello.py service
-This will execute the hello.py app, after all other startup services have been executed on the RPi. 
+This will execute the *hello.py* app, after all other startup services have been executed on the RPi. 
 
-The service will log entries to */boot/firmware/hello.log* on the *RPi* or */bootfs/hello.log* when examining the SD Card on a Mac/Windows system. Use it to determine any issues with the service.
+The service will log entries to */boot/firmware/hello.log* on the *RPi* or */bootfs/hello.log* when examining the SD card on a Mac/Windows system. Use it to determine any issues with the service.
 
-You may also use the command `journalctl -b`, to see all boot messages of the *RPi*. or use `journalctl -b | grep hello`, to see all messages related to the service.
+You may use the command `journalctl -b`, to see all boot messages of the *RPi*. or use `journalctl -b | grep hello`, to see all messages related to the service.
 
 You can use the space bar, to quickly go through screens of lines. Look for the word DEBUG as the *hello.py* application uses logging to print messages.
 
 #### hello.service
-Same as above, use nano to create file, copy/paste contents below then exit *nano*. **Be sure to change *username* to what is appropriate for your system.
+Same as above, use nano to create file, copy/paste contents below then exit *nano*. 
+
 ```bash
 sudo nano /lib/systemd/system/hello.service
 ```
@@ -195,7 +217,10 @@ WantedBy=multi-user.target
 
 Exit nano using *Ctrl-S* *Ctrl-X*
 
-Run the following commands to create service and test it. (*Go to step 4 and confirm the hello message appears*):
+#### 2.4 Run the following commands to create service and test it. 
+
+(*It helps to go to step 3 on your host system and confirm the hello message appears*):
+
 ```bash
 sudo chmod 644 /lib/systemd/system/hello.service
 sudo systemctl daemon-reload
@@ -204,7 +229,7 @@ sudo systemctl start hello.service
 sudo systemctl status hello.service
 ```
 
-**It is important to enable the service to run on startup.**
+#### 2.5 Enable the service to run on startup. (IMPORTANT)
 ```bash
 # if hello.service is running well, then enable to run on boot
 sudo systemctl enable hello.service
@@ -329,13 +354,13 @@ There is a "chicken/egg" problem which can occur. If you can't initially connect
 ### Creating a Raspberry Pi OS hello image
 *You will need to do this in a small network or tightly coupled setup as described in solution #1 above.*
 
-1. Use Pi Imager to write the Raspberry Pi OS Lite (64-bit) to an SD Card or USB drive. In the OS Customization tab, I've provided the hostname of *hello* and as I know it will be my image, I add my publickey on the Services tab.
-2. Once written, I put the SD Card into my *RPi*, wait for it to boot sufficiently then login `ssh hello.local`.
+1. Use Pi Imager to write the Raspberry Pi OS Lite (64-bit) to an SD card or USB drive. In the OS Customization tab, I've provided the hostname of *hello* and as I know it will be my image, I add my publickey on the Services tab.
+2. Once written, I put the SD card into my *RPi*, wait for it to boot sufficiently then login `ssh hello.local`.
 3. I follow the steps above, and once I've confirmed the service works well. I create a new image:
 ### Saving, shrinking and sending an image
 I use a Linux laptop to perform the following steps. You can use your Raspberry Pi, however, you will need several smaller USB drives to hold the images prior to shrinking them.
 ```bash
-# remove SD Card or USB drive containing RPi image and place in Linux PC
+# remove SD card or USB drive containing RPi image and place in Linux PC
 # determine physical device
 lsblk
 # find specific drive "sdc", "sdd" which is the right size of RPi drive, use as input
