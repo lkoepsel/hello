@@ -18,7 +18,7 @@ def setup_logging():
 
         # set logging to DEBUG, if messages aren't seen in log file
         logging.basicConfig(
-            filename="/tmp/hello.log",
+            filename="/home/lkoepsel/hello.log",
             encoding="utf-8",
             format="%(asctime)s %(filename)s:%(levelname)s: %(message)s",
             level=logging.DEBUG,
