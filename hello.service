@@ -1,15 +1,18 @@
-    [Unit]
-    Description=Ping a known server (hello_ip.txt) with hostname and IP address
-    After=network-online.target
-    Wants=network-online.target
+[Unit]
+Description=Ping a known server (hello_ip.txt) with hostname and IP address
+After=network-online.target
+Wants=network-online.target
 
-    [Service]
-    Type=simple
-    ExecStart=/usr/bin/python /usr/bin/hello.py
-    Restart=on-failure
-    RestartSec=1
-    StartLimitInterval=0
-    StartLimitBurst=5
+[Service]
+Type=simple
+User=root
+ExecStart=/usr/bin/python /usr/bin/hello.py
+Restart=on-failure
+RestartSec=1
+StartLimitInterval=0
+StartLimitBurst=5
+StandardOutput=journal
+StandardError=journal
 
-    [Install]
-    WantedBy=multi-user.target
+[Install]
+WantedBy=multi-user.target
