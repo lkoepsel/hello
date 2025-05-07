@@ -4,15 +4,28 @@ After=network-online.target
 Wants=network-online.target
 
 [Service]
-Type=simple
+Type=oneshot
+# Remount the partition read-write
+ExecStart=/bin/sh -c 'mount -o remount,rw /boot/firmware'
+# Run your script/command to write data
 ExecStart=/usr/bin/python /usr/bin/hello.py
-TimeoutStartSec=40
-Restart=on-failure
-RestartSec=10
-StartLimitInterval=0
-StartLimitBurst=5
-StandardOutput=journal
-StandardError=journal
+# Optionally remount read-only for safety
+ExecStart=/bin/sh -c 'mount -o remount,ro /boot/firmware'
+# Don't restart this service
+Restart=no
+# Run as root to have necessary permissions
+User=root
+
+[Service]
+# Type=simple
+# ExecStart=/usr/bin/python /usr/bin/hello.py
+# TimeoutStartSec=40
+# Restart=on-failure
+# RestartSec=10
+# StartLimitInterval=0
+# StartLimitBurst=5
+# StandardOutput=journal
+# StandardError=journal
 
 [Install]
 WantedBy=multi-user.target
