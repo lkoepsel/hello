@@ -8,7 +8,6 @@ import sys
 def setup_logging():
     try:
         # Check if /boot/firmware is mounted
-        os.system("sudo mount -o remount,rw /boot/firmware")
         hadtomount = False
         if not os.path.exists("/boot/firmware"):
             hadtomount = True
@@ -19,7 +18,7 @@ def setup_logging():
 
         # set logging to DEBUG, if messages aren't seen in log file
         logging.basicConfig(
-            filename="/boot/firmware/hello.log",
+            filename="/home/lkoepsel/hello.log",
             encoding="utf-8",
             format="%(asctime)s %(filename)s:%(levelname)s: %(message)s",
             level=logging.DEBUG,
