@@ -77,7 +77,7 @@ def main():
         host_name = socket.gethostname()
         logging.debug("Host name: %s", host_name)
 
-        url = "http://" + ip + "/receive"
+        url = "http://" + ip
         text = f"{host_name}"  # send hostname
         logging.debug("Sending request to: %s", url)
 
