@@ -10,7 +10,7 @@ app = Flask(__name__)
 
 # Configuration
 DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
-PORT = int(os.environ.get('PORT', 5000))
+PORT = int(os.environ.get('PORT', 5001))
 DATABASE = 'messages.db'
 
 def init_db():
