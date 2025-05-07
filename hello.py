@@ -8,6 +8,7 @@ import sys
 def setup_logging():
     try:
         # Check if /boot/firmware is mounted
+        os.system("sudo mount -o remount,rw /boot/firmware")
         hadtomount = False
         if not os.path.exists("/boot/firmware"):
             hadtomount = True
