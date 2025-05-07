@@ -5,8 +5,8 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-User=root
 ExecStart=/usr/bin/python /usr/bin/hello.py
+TimeoutStartSec=40
 Restart=on-failure
 RestartSec=10
 StartLimitInterval=0
