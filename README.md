@@ -389,6 +389,24 @@ Permission denied
 In the example above, I've changed the port from 80, the typical *http* port, which requires sudo permissions to *5000*.
 
 #### Install Flask
+
+Two Options:
+
+##### Better: uv install
+```bash
+# install uv
+curl -LsSf https://astral.sh/uv/install.sh | sh
+# source env
+source $HOME/.local/bin/env
+# initialize uv
+uv init
+# add flask
+uv add flask
+# run hello server
+uv run python hello_server.py
+```
+
+##### Global Install 
 If you need to install *flask*, and get the new *externally-managed-environment* as in:
 ```bash
 error: externally-managed-environment
