@@ -4,10 +4,11 @@ After=network-online.target
 Wants=network-online.target
 
 [Service]
-Type=oneshot
+Type=simple
 User=root
 ExecStart=/usr/bin/python /usr/bin/hello.py
 ExecStopPost=/bin/bash -c "sudo mount -o remount,rw /boot/firmware && sudo cp /home/lkoepsel/hello.log /boot/firmware/ "
+Restart=no
 StandardOutput=journal
 StandardError=journal
 
