@@ -136,6 +136,7 @@ import requests
 import socket
 import os
 import sys
+import time
 
 
 def setup_logging():
@@ -192,10 +193,84 @@ def find_ip_file():
     sys.exit(21)  # Exit code 21: IP file not found
 
 
+def check_already_ran():
+    """Check if we've already completed our 3 runs since boot"""
+    completed_file = "/tmp/hello_completed"
+    
+    if os.path.exists(completed_file):
+        logging.info("Service has already completed 3 runs since boot. Exiting.")
+        print("INFO: Service has already completed 3 runs since boot.")
+        return True
+    
+    return False
+
+
+def mark_completed():
+    """Mark that we've completed our 3 runs"""
+    completed_file = "/tmp/hello_completed"
+    try:
+        with open(completed_file, "w") as f:
+            f.write("completed")
+        logging.info("Marked service as completed after 3 runs")
+    except Exception as e:
+        logging.error("Error marking completion: %s", str(e))
+
+
+def send_hello_request(ip, attempt_num):
+    """Send a single hello request"""
+    try:
+        # Get hostname and prepare request
+        host_name = socket.gethostname()
+        logging.debug("Host name: %s", host_name)
+
+        url = "http://" + ip
+        text = f"{host_name}"  # send hostname
+        logging.debug("Attempt #%d - Sending request to: %s", attempt_num, url)
+
+        data = {"text": text}
+
+        response = requests.post(url, data=data, timeout=10)
+        response.raise_for_status()  # Raise exception for 4XX/5XX responses
+
+        logging.info("Attempt #%d - SUCCESS: Status code: %s", attempt_num, response.status_code)
+        logging.debug("Attempt #%d - Response: %s", attempt_num, response.text)
+        return True
+
+    except requests.exceptions.ConnectionError as e:
+        error_msg = f"Attempt #%d - Connection error to {url}: {str(e)}"
+        logging.error(error_msg)
+        print(f"ERROR: {error_msg}", file=sys.stderr)
+        return False
+
+    except requests.exceptions.Timeout as e:
+        error_msg = f"Attempt #%d - Request timed out to {url}: {str(e)}"
+        logging.error(error_msg)
+        print(f"ERROR: {error_msg}", file=sys.stderr)
+        return False
+
+    except requests.exceptions.HTTPError as e:
+        error_msg = f"Attempt #%d - HTTP error from {url}: {str(e)}"
+        logging.error(error_msg)
+        print(f"ERROR: {error_msg}", file=sys.stderr)
+        return False
+
+    except requests.exceptions.RequestException as e:
+        error_msg = f"Attempt #%d - Request failed to {url}: {str(e)}"
+        logging.error(error_msg)
+        print(f"ERROR: {error_msg}", file=sys.stderr)
+        return False
+
+
 def main():
     try:
         # Setup logging and mount if needed
         hadtomount = setup_logging()
+
+        # Check if we've already completed our runs
+        if check_already_ran():
+            return 0
+
+        logging.info("Starting hello service - will attempt 3 times")
 
         # Find IP address
         ip = find_ip_file()
@@ -206,47 +281,27 @@ def main():
             if umount_result != 0:
                 logging.warning("Failed to unmount /boot/firmware")
 
-        # Get hostname and prepare request
-        host_name = socket.gethostname()
-        logging.debug("Host name: %s", host_name)
+        # Make 3 attempts with delays
+        success_count = 0
+        for attempt in range(1, 4):  # 1, 2, 3
+            logging.info("Starting attempt #%d of 3", attempt)
+            
+            success = send_hello_request(ip, attempt)
+            if success:
+                success_count += 1
+            
+            # Wait 10 seconds before next attempt (except after the last one)
+            if attempt < 3:
+                logging.info("Waiting 10 seconds before next attempt...")
+                time.sleep(10)
 
-        url = "http://" + ip
-        text = f"{host_name}"  # send hostname
-        logging.debug("Sending request to: %s", url)
-
-        data = {"text": text}
-
-        try:
-            response = requests.post(url, data=data, timeout=10)
-            response.raise_for_status()  # Raise exception for 4XX/5XX responses
-
-            logging.debug("Status code: %s", response.status_code)
-            logging.debug("Response: %s", response.text)
-            return 0  # Success
-
-        except requests.exceptions.ConnectionError as e:
-            error_msg = f"Connection error to {url}: {str(e)}"
-            logging.error(error_msg)
-            print(f"ERROR: {error_msg}", file=sys.stderr)
-            return 30  # Exit code 30: Connection error
-
-        except requests.exceptions.Timeout as e:
-            error_msg = f"Request timed out to {url}: {str(e)}"
-            logging.error(error_msg)
-            print(f"ERROR: {error_msg}", file=sys.stderr)
-            return 31  # Exit code 31: Timeout
-
-        except requests.exceptions.HTTPError as e:
-            error_msg = f"HTTP error from {url}: {str(e)}"
-            logging.error(error_msg)
-            print(f"ERROR: {error_msg}", file=sys.stderr)
-            return 32  # Exit code 32: HTTP error
-
-        except requests.exceptions.RequestException as e:
-            error_msg = f"Request failed to {url}: {str(e)}"
-            logging.error(error_msg)
-            print(f"ERROR: {error_msg}", file=sys.stderr)
-            return 33  # Exit code 33: General request error
+        # Mark as completed so we don't run again until reboot
+        mark_completed()
+        
+        logging.info("Completed all 3 attempts. Successful attempts: %d/3", success_count)
+        print(f"INFO: Completed all 3 attempts. Successful attempts: {success_count}/3")
+        
+        return 0  # Always return 0 to prevent service restart
 
     except Exception as e:
         error_msg = f"Unexpected error: {str(e)}"
@@ -256,13 +311,12 @@ def main():
         except:
             pass
         print(f"ERROR: {error_msg}", file=sys.stderr)
-        return 99  # Exit code 99: Unexpected error
+        return 0  # Return 0 to prevent restart
 
 
 if __name__ == "__main__":
     exit_code = main()
     sys.exit(exit_code)
-
 ```
 *Ctrl-S* (save) *Ctrl-X* (exit)
 
@@ -326,7 +380,7 @@ sudo nano /lib/systemd/system/hello.service
 Copy/paste contents below into the file:
 ```bash
 [Unit]
-Description=Ping a known server (hello_ip.txt) with hostname and IP address
+Description=Ping a known server (hello_ip.txt) with hostname and IP address (3 times per boot)
 After=network-online.target
 Wants=network-online.target
 
@@ -335,8 +389,7 @@ Type=simple
 User=root
 ExecStart=/usr/bin/python /usr/bin/hello.py
 ExecStopPost=/bin/bash -c "sudo mount -o remount,rw /boot/firmware && sudo cp /home/lkoepsel/hello.log /boot/firmware/ "
-Restart=on-failure
-RestartSec=10
+Restart=no
 StandardOutput=journal
 StandardError=journal
 
