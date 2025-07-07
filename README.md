@@ -2,39 +2,53 @@
 
 ## Recent Changes (July 7, 2025)
 
-### Service Execution Limit Update
-The hello service has been modified to prevent excessive log file growth and resource usage. Key changes include:
+### Service Execution Limit Update - Final Implementation
+
+The hello service has been modified to prevent excessive log file growth and resource usage while ensuring it properly executes 3 attempts per boot cycle.
 
 **Problem Solved:**
 - The hello service was running continuously every 10 seconds, creating a significantly large log file
 - Service would restart indefinitely on connection failures, consuming system resources
+- Initial fix only ran once per boot instead of the intended 3 times
 
-**Changes Made:**
+**Final Solution - Changes Made:**
 
 1. **hello.py Script Updates:**
-   - Added run count tracking using `/tmp/hello_run_count` file
-   - Service now runs only **3 times per boot cycle** instead of continuously
-   - Modified error handling to return exit code 0 (preventing restarts) while still logging errors
-   - Added informative logging messages showing run attempt numbers (1/3, 2/3, 3/3)
-   - After 3 attempts, service exits gracefully with message "Already ran 3 times since boot"
+   - **Complete rewrite of execution logic**: Service now performs all 3 attempts within a single execution
+   - **Timing**: Makes 3 attempts with 10-second delays between attempts (total runtime ~20 seconds)
+   - **Completion tracking**: Uses `/tmp/hello_completed` file to prevent multiple executions per boot
+   - **Enhanced logging**: Each attempt clearly labeled as "Starting attempt #1 of 3", etc.
+   - **Error handling**: All connection errors logged but don't cause service restarts
+   - **Summary reporting**: Final log shows "Completed all 3 attempts. Successful attempts: X/3"
 
 2. **hello.service Configuration Updates:**
-   - Changed service type from `simple` to `oneshot` for single execution per start
-   - Removed `Restart=on-failure` and `RestartSec=10` to prevent automatic restarts
-   - Updated service description to reflect "3 times per boot" behavior
-   - Maintained all other functionality including log copying to `/boot/firmware/`
+   - **Service type**: Changed to `Type=simple` with `Restart=no` 
+   - **Single execution**: Service runs once per boot, making all 3 attempts internally
+   - **No auto-restart**: Removed restart policies to prevent continuous execution
+   - **Maintained functionality**: All original features preserved (log copying, error codes, etc.)
 
-**Behavior:**
-- Service runs 3 times maximum per boot cycle
-- Each attempt is logged with clear attempt numbering
-- Connection errors are logged but don't trigger restarts
-- Run count resets automatically on system reboot (since `/tmp/` is cleared)
-- Service can be manually restarted but will respect the 3-run limit per boot
+**Current Behavior:**
+- ✅ Service executes exactly **3 attempts per boot cycle**
+- ✅ **Timing**: Attempt 1 (immediate) → 10s wait → Attempt 2 → 10s wait → Attempt 3 → Complete
+- ✅ **Duration**: Service runs for approximately 20 seconds total
+- ✅ **Prevention**: Won't run again until system reboot
+- ✅ **Logging**: Clear attempt numbering and completion status
+- ✅ **Manual restart**: Can be manually started but respects completion limit
+
+**Implementation Details:**
+```
+Service Start → Attempt #1 → [10s delay] → Attempt #2 → [10s delay] → Attempt #3 → Mark Complete → Exit
+```
 
 **Backward Compatibility:**
 - All original functionality preserved (IP detection, hostname sending, log copying)
-- Same exit codes and error handling for system monitoring
+- Same exit codes and error handling for system monitoring  
 - No changes to server-side requirements
+- Compatible with existing `hello_ip.txt` configuration
+
+**Files Modified:**
+- `hello.py`: Complete rewrite of main execution logic
+- `hello.service`: Updated service configuration for proper 3-attempt execution
 
 ---
 
@@ -45,6 +59,8 @@ Recently, the Raspberry Pi Foundation released [Raspberry Pi Connect](https://ww
 * Its a *world-wide* solution. I was looking for a *local* solution, one which doesn't **require** connecting to the internet.
 * And the deal-killer, it requires the full desktop install. If I need to connect to my Raspberry Pi, more often than not, its in a headless configuration. Headless and desktop are somewhat *antithetical*. 
 
+**Update: July 4th, 2024**
+Raspberry Pi has added the ability to perform this on a CLI OS, such as Bookworm (Lite), however, it still seems to be a bit much.
 **Update: July 4th, 2024**
 Raspberry Pi has added the ability to perform this on a CLI OS, such as Bookworm (Lite), however, it still seems to be a bit much.
 
