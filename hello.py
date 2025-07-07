@@ -59,10 +59,44 @@ def find_ip_file():
     sys.exit(21)  # Exit code 21: IP file not found
 
 
+def check_run_count():
+    """Check if we've already run 3 times since boot"""
+    count_file = "/tmp/hello_run_count"
+    
+    try:
+        if os.path.exists(count_file):
+            with open(count_file, "r") as f:
+                count = int(f.read().strip())
+        else:
+            count = 0
+        
+        if count >= 3:
+            logging.info("Already ran 3 times since boot. Exiting to prevent further runs.")
+            print("INFO: Already ran 3 times since boot. Service will not run again until reboot.")
+            return False
+        
+        # Increment count
+        count += 1
+        with open(count_file, "w") as f:
+            f.write(str(count))
+        
+        logging.info("Run attempt #%d of 3", count)
+        return True
+        
+    except Exception as e:
+        logging.error("Error checking run count: %s", str(e))
+        # If we can't track, assume we can run (fail safe)
+        return True
+
+
 def main():
     try:
         # Setup logging and mount if needed
         hadtomount = setup_logging()
+
+        # Check if we should run (max 3 times per boot)
+        if not check_run_count():
+            return 0  # Exit successfully to prevent restart
 
         # Find IP address
         ip = find_ip_file()
@@ -95,25 +129,25 @@ def main():
             error_msg = f"Connection error to {url}: {str(e)}"
             logging.error(error_msg)
             print(f"ERROR: {error_msg}", file=sys.stderr)
-            return 30  # Exit code 30: Connection error
+            return 0  # Return 0 to prevent restart, but log the error
 
         except requests.exceptions.Timeout as e:
             error_msg = f"Request timed out to {url}: {str(e)}"
             logging.error(error_msg)
             print(f"ERROR: {error_msg}", file=sys.stderr)
-            return 31  # Exit code 31: Timeout
+            return 0  # Return 0 to prevent restart
 
         except requests.exceptions.HTTPError as e:
             error_msg = f"HTTP error from {url}: {str(e)}"
             logging.error(error_msg)
             print(f"ERROR: {error_msg}", file=sys.stderr)
-            return 32  # Exit code 32: HTTP error
+            return 0  # Return 0 to prevent restart
 
         except requests.exceptions.RequestException as e:
             error_msg = f"Request failed to {url}: {str(e)}"
             logging.error(error_msg)
             print(f"ERROR: {error_msg}", file=sys.stderr)
-            return 33  # Exit code 33: General request error
+            return 0  # Return 0 to prevent restart
 
     except Exception as e:
         error_msg = f"Unexpected error: {str(e)}"
@@ -123,7 +157,7 @@ def main():
         except:
             pass
         print(f"ERROR: {error_msg}", file=sys.stderr)
-        return 99  # Exit code 99: Unexpected error
+        return 0  # Return 0 to prevent restart
 
 
 if __name__ == "__main__":

@@ -1,5 +1,43 @@
 # hello - A Raspberry Pi Identity Solution
 
+## Recent Changes (July 7, 2025)
+
+### Service Execution Limit Update
+The hello service has been modified to prevent excessive log file growth and resource usage. Key changes include:
+
+**Problem Solved:**
+- The hello service was running continuously every 10 seconds, creating a significantly large log file
+- Service would restart indefinitely on connection failures, consuming system resources
+
+**Changes Made:**
+
+1. **hello.py Script Updates:**
+   - Added run count tracking using `/tmp/hello_run_count` file
+   - Service now runs only **3 times per boot cycle** instead of continuously
+   - Modified error handling to return exit code 0 (preventing restarts) while still logging errors
+   - Added informative logging messages showing run attempt numbers (1/3, 2/3, 3/3)
+   - After 3 attempts, service exits gracefully with message "Already ran 3 times since boot"
+
+2. **hello.service Configuration Updates:**
+   - Changed service type from `simple` to `oneshot` for single execution per start
+   - Removed `Restart=on-failure` and `RestartSec=10` to prevent automatic restarts
+   - Updated service description to reflect "3 times per boot" behavior
+   - Maintained all other functionality including log copying to `/boot/firmware/`
+
+**Behavior:**
+- Service runs 3 times maximum per boot cycle
+- Each attempt is logged with clear attempt numbering
+- Connection errors are logged but don't trigger restarts
+- Run count resets automatically on system reboot (since `/tmp/` is cleared)
+- Service can be manually restarted but will respect the 3-run limit per boot
+
+**Backward Compatibility:**
+- All original functionality preserved (IP detection, hostname sending, log copying)
+- Same exit codes and error handling for system monitoring
+- No changes to server-side requirements
+
+---
+
 **Formerly know as rasp-mDNS**, *yeah, its clear why I changed the name.*
 
 Recently, the Raspberry Pi Foundation released [Raspberry Pi Connect](https://www.raspberrypi.com/documentation/services/connect.html), which "*provides secure access to your Raspberry Pi from anywhere in the world.*" That's great, except for a couple of issues:
@@ -14,6 +52,9 @@ Raspberry Pi has added the ability to perform this on a CLI OS, such as Bookworm
 This is a solution for identifying newly programmed, headless *Raspberry Pi (RPi)*'s on a large network. In large networks (*ex: community college*), the wireless network has a significant issue. As network is quite large, it can be difficult to readily identify a *RPi* which has recently joined the network, therefore making it almost impossible to connect to the *RPi*.
 
 ## Easy Solution (*macOS* or *Linux*)
+There are two, dead-simple, solutions which work well in **small networks** and on *macOS* or *Linux*. *Windows* unfortunately, doesn't do *Bonjour*.:
+
+1. Use the *multicast DNS* service to attempt to connect. This uses the existing solution of [*avahi aka zeroconfig or Bonjour*](https://www.raspberrypi.com/documentation/computers/remote-access.html#resolving-raspberrypi-local-with-mdns) to connect with the *RPi*. It works quite well and is the best solution.
 There are two, dead-simple, solutions which work well in **small networks** and on *macOS* or *Linux*. *Windows* unfortunately, doesn't do *Bonjour*.:
 
 1. Use the *multicast DNS* service to attempt to connect. This uses the existing solution of [*avahi aka zeroconfig or Bonjour*](https://www.raspberrypi.com/documentation/computers/remote-access.html#resolving-raspberrypi-local-with-mdns) to connect with the *RPi*. It works quite well and is the best solution.
