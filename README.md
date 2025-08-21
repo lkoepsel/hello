@@ -152,7 +152,7 @@ def setup_logging():
 
         # set logging to DEBUG, if messages aren't seen in log file
         logging.basicConfig(
-            filename="/home/lkoepsel/hello.log",
+            filename="~/hello.log",
             encoding="utf-8",
             format="%(asctime)s %(filename)s:%(levelname)s: %(message)s",
             level=logging.DEBUG,
@@ -388,7 +388,7 @@ Wants=network-online.target
 Type=simple
 User=root
 ExecStart=/usr/bin/python /usr/bin/hello.py
-ExecStopPost=/bin/bash -c "sudo mount -o remount,rw /boot/firmware && sudo cp /home/lkoepsel/hello.log /boot/firmware/ "
+ExecStopPost=/bin/bash -c "sudo mount -o remount,rw /boot/firmware && sudo cp ~/hello.log /boot/firmware/ "
 Restart=no
 StandardOutput=journal
 StandardError=journal

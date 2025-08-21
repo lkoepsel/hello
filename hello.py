@@ -19,7 +19,7 @@ def setup_logging():
 
         # set logging to DEBUG, if messages aren't seen in log file
         logging.basicConfig(
-            filename="/home/lkoepsel/hello.log",
+            filename="~/hello.log",
             encoding="utf-8",
             format="%(asctime)s %(filename)s:%(levelname)s: %(message)s",
             level=logging.DEBUG,
@@ -63,12 +63,12 @@ def find_ip_file():
 def check_already_ran():
     """Check if we've already completed our 3 runs since boot"""
     completed_file = "/tmp/hello_completed"
-    
+
     if os.path.exists(completed_file):
         logging.info("Service has already completed 3 runs since boot. Exiting.")
         print("INFO: Service has already completed 3 runs since boot.")
         return True
-    
+
     return False
 
 
@@ -99,7 +99,9 @@ def send_hello_request(ip, attempt_num):
         response = requests.post(url, data=data, timeout=10)
         response.raise_for_status()  # Raise exception for 4XX/5XX responses
 
-        logging.info("Attempt #%d - SUCCESS: Status code: %s", attempt_num, response.status_code)
+        logging.info(
+            "Attempt #%d - SUCCESS: Status code: %s", attempt_num, response.status_code
+        )
         logging.debug("Attempt #%d - Response: %s", attempt_num, response.text)
         return True
 
@@ -152,11 +154,11 @@ def main():
         success_count = 0
         for attempt in range(1, 4):  # 1, 2, 3
             logging.info("Starting attempt #%d of 3", attempt)
-            
+
             success = send_hello_request(ip, attempt)
             if success:
                 success_count += 1
-            
+
             # Wait 10 seconds before next attempt (except after the last one)
             if attempt < 3:
                 logging.info("Waiting 10 seconds before next attempt...")
@@ -164,10 +166,12 @@ def main():
 
         # Mark as completed so we don't run again until reboot
         mark_completed()
-        
-        logging.info("Completed all 3 attempts. Successful attempts: %d/3", success_count)
+
+        logging.info(
+            "Completed all 3 attempts. Successful attempts: %d/3", success_count
+        )
         print(f"INFO: Completed all 3 attempts. Successful attempts: {success_count}/3")
-        
+
         return 0  # Always return 0 to prevent service restart
 
     except Exception as e:
